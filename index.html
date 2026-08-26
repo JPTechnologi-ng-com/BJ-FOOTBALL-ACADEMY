@@ -454,8 +454,8 @@
   <div class="contact-grid">
     <ul class="contact-list">
       <li><span class="k">Location</span><span class="v">Akpakpa, Cotonou, Republic of Benin</span></li>
-      <li><span class="k">Phone</span><span class="v">+229 00 00 00 00</span></li>
-      <li><span class="k">Email</span><span class="v">info@bjfootballacademy.bj</span></li>
+      <li><span class="k">Phone</span><span class="v">+234 805 171 4842</span></li>
+      <li><span class="k">Email</span><span class="v">adogbejosep419@gmail.com</span></li>
       <li><span class="k">Trials</span><span class="v">Saturdays, 9:00 AM — open to ages 10–17</span></li>
     </ul>
     <div class="form-box">
@@ -491,12 +491,12 @@
     <button class="chat-close" id="chatClose">×</button>
   </div>
   <div class="chat-body" id="chatBody">
-    <div class="msg bot">Hi! I'm the BJ Football Academy assistant. Ask me about trials, age groups, fees, location, or the squad.</div>
+    <div class="msg bot">Hi! I'm the BJ Football Academy assistant. Ask me about any player by name or jersey number, positions, trials, age groups, fees, location, or achievements.</div>
   </div>
   <div class="quick-replies" id="quickReplies">
+    <button class="qr-btn" data-q="Who is number 9?">Who is #9?</button>
+    <button class="qr-btn" data-q="List our forwards">List forwards</button>
     <button class="qr-btn" data-q="How do I book a trial?">Book a trial</button>
-    <button class="qr-btn" data-q="What age groups do you have?">Age groups</button>
-    <button class="qr-btn" data-q="Where are you located?">Location</button>
   </div>
   <div class="chat-input-row">
     <input type="text" id="chatInput" placeholder="Type your question…">
@@ -573,6 +573,27 @@
   });
   renderRoster();
 
+  // ---------------- Team info the chatbot can draw on ----------------
+  const teamInfo = {
+    founded: 2018,
+    location: "Akpakpa, Cotonou, Republic of Benin",
+    phone: "+234 805 171 4842",
+    email: "adogbejosep419@gmail.com",
+    coachingStaff: 9,
+    trialSchedule: "Saturdays, 9:00 AM, open to ages 10–17",
+    divisions: [
+      { name: "Foundation", ages: "U-10 – U-13", focus: "Ball mastery, coordination, and a love for the game before tactics." },
+      { name: "Development", ages: "U-14 – U-17", focus: "Positional intelligence, physical conditioning, competitive league fixtures." },
+      { name: "Elite Pathway", ages: "U-18 & Elite", focus: "Trial exposure to regional scouts and partner clubs, professional readiness." }
+    ],
+    achievements: {
+      regionalTitles: 3,
+      playersSignedOnward: 14,
+      u17WinRate: "78%",
+      yearsRunning: 6
+    }
+  };
+
   // ---------------- Chatbot (rule-based, no external API) ----------------
   const chatToggle = document.getElementById('chat-toggle');
   const chatWindow = document.getElementById('chat-window');
@@ -596,27 +617,71 @@
     chatBody.scrollTop = chatBody.scrollHeight;
   }
 
+  function findPlayerByName(t){
+    // match on any word in a player's name (min 3 chars to avoid false hits)
+    return players.find(p =>
+      p.name.toLowerCase().split(' ').some(part => part.length > 2 && t.includes(part))
+    );
+  }
+
+  function findPlayerByNumber(t){
+    const m = t.match(/(?:number|jersey|#)\s*(\d{1,2})|\bno\.?\s*(\d{1,2})/);
+    if(!m) return null;
+    const num = parseInt(m[1] || m[2], 10);
+    return players.find(p => p.num === num);
+  }
+
+  function listByPosition(code){
+    return players.filter(p => p.pos === code).map(p => `#${p.num} ${p.name} (${p.age})`).join(', ');
+  }
+
   function botReply(userText){
     const t = userText.toLowerCase();
     let reply;
-    if(t.includes('trial')){
-      reply = "Trials run every Saturday at 9:00 AM, open to ages 10–17. Bring boots, shin guards, and a parent or guardian for registration.";
+
+    // --- individual player lookups first (name or jersey number) ---
+    const byNum = findPlayerByNumber(t);
+    const byName = findPlayerByName(t);
+    const player = byNum || byName;
+
+    if(player && (t.includes('who') || t.includes('tell me about') || t.includes('info') || byNum || byName)){
+      reply = `${player.name} wears #${player.num}, plays ${posLabel(player.pos)}, and is ${player.age} years old.`;
+    } else if(t.includes('goalkeeper') || t.includes('goalkeepers') || /\bgk\b/.test(t)){
+      reply = `Our goalkeepers: ${listByPosition('GK')}.`;
+    } else if(t.includes('defender') || t.includes('defenders') || /\bdf\b/.test(t)){
+      reply = `Our defenders: ${listByPosition('DF')}.`;
+    } else if(t.includes('midfielder') || t.includes('midfielders') || /\bmf\b/.test(t)){
+      reply = `Our midfielders: ${listByPosition('MF')}.`;
+    } else if(t.includes('forward') || t.includes('forwards') || t.includes('striker') || /\bfw\b/.test(t)){
+      reply = `Our forwards: ${listByPosition('FW')}.`;
+    } else if(t.includes('how many player') || (t.includes('squad size') )){
+      reply = `We currently have ${players.length} players listed on the Squad Board.`;
+    } else if(t.includes('captain')){
+      reply = "Captaincy rotates by squad and season — check with the coaching staff for the current match-day captain.";
+    } else if(t.includes('roster') || t.includes('squad') || t.includes('team list') || t.includes('all player')){
+      reply = `Full squad (${players.length}): ` + players.map(p => `#${p.num} ${p.name}`).join(', ') + '. You can also search and filter them visually in the Squad Board above.';
+    } else if(t.includes('found') || t.includes('history') || t.includes('when') && t.includes('start')){
+      reply = `BJ Football Academy was founded in ${teamInfo.founded} and has been running for ${teamInfo.achievements.yearsRunning} years.`;
+    } else if(t.includes('title') || t.includes('trophy') || t.includes('win') || t.includes('achievement')){
+      reply = `We've won ${teamInfo.achievements.regionalTitles} regional titles, sent ${teamInfo.achievements.playersSignedOnward} players on to bigger clubs, and our U-17s have a ${teamInfo.achievements.u17WinRate} match win rate.`;
+    } else if(t.includes('division') || t.includes('program')){
+      reply = teamInfo.divisions.map(d => `${d.name} (${d.ages}): ${d.focus}`).join(' | ');
+    } else if(t.includes('trial')){
+      reply = `Trials run ${teamInfo.trialSchedule}. Bring boots, shin guards, and a parent or guardian for registration.`;
     } else if(t.includes('age') || t.includes('group')){
-      reply = "We coach four age divisions: U-10–U13 (Foundation), U-14–U17 (Development), and U-18+ (Elite Pathway).";
+      reply = "We coach three divisions: U-10–U13 (Foundation), U-14–U17 (Development), and U-18+ (Elite Pathway).";
     } else if(t.includes('locat') || t.includes('where') || t.includes('address')){
-      reply = "The academy is based in Akpakpa, Cotonou, Republic of Benin.";
+      reply = `The academy is based in ${teamInfo.location}.`;
     } else if(t.includes('fee') || t.includes('cost') || t.includes('price') || t.includes('pay')){
       reply = "Fees vary by age division — our team can share current rates by phone or email. See the Contact section below.";
     } else if(t.includes('contact') || t.includes('phone') || t.includes('email')){
-      reply = "You can reach us at +229 00 00 00 00 or info@bjfootballacademy.bj — details are also in the Contact section.";
-    } else if(t.includes('player') || t.includes('squad') || t.includes('roster') || t.includes('team')){
-      reply = "You can search our full squad by name or position in the Squad Board section above the fold.";
+      reply = `You can reach us at ${teamInfo.phone} or ${teamInfo.email} — details are also in the Contact section.`;
     } else if(t.includes('coach') || t.includes('staff')){
-      reply = "The academy currently runs with 9 coaching staff across all age divisions.";
+      reply = `The academy currently runs with ${teamInfo.coachingStaff} coaching staff across all age divisions.`;
     } else if(t.includes('hi') || t.includes('hello') || t.includes('hey')){
-      reply = "Hello! Ask me about trials, age groups, fees, location, or the squad.";
+      reply = "Hello! Ask me about any player by name or number, trials, age groups, fees, location, or the full squad.";
     } else {
-      reply = "I don't have that on file yet — for anything specific, reach out directly via the Contact section and our team will follow up.";
+      reply = "I don't have that on file yet — try asking about a specific player (name or jersey number), a position, or academy details. For anything else, reach out via the Contact section.";
     }
     setTimeout(() => addMsg(reply, 'bot'), 450);
   }
