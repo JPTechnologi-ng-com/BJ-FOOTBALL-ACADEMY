@@ -259,6 +259,12 @@
   .form-box input:focus, .form-box textarea:focus{ border-color: var(--gold); }
   .form-box textarea{ resize: vertical; min-height:90px; }
   .form-box .btn{ margin-top:20px; width:100%; justify-content:center; }
+  .form-status{
+    margin-top:12px; font-family: var(--font-mono); font-size:0.78rem;
+    text-align:center; min-height:1.2em;
+  }
+  .form-status.success{ color: #7ED9A8; }
+  .form-status.error{ color: var(--red); }
 
   footer{
     border-top: 1px solid var(--line); padding: 32px 24px; text-align:center;
@@ -283,12 +289,44 @@
   }
   #chat-window{
     position: fixed; bottom: 100px; right: 26px; z-index: 100;
-    width: 340px; max-width: calc(100vw - 40px); height: 460px;
+    width: 380px; max-width: calc(100vw - 40px); height: 540px;
     background: var(--bg-2); border:1px solid var(--line); border-radius:10px;
-    display:none; flex-direction:column; overflow:hidden;
+    display:none; overflow:hidden;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
   #chat-window.open{ display:flex; }
+  .chat-shell{ position:relative; display:flex; width:100%; height:100%; min-width:0; overflow:hidden; }
+  .chat-sidebar{
+    position:absolute; left:0; top:0; bottom:0; z-index:5;
+    width:190px; flex-shrink:0; background: var(--bg-3);
+    border-right: 1px solid var(--line); padding: 14px 10px;
+    display:flex; flex-direction:column; gap:10px; overflow-y:auto;
+    transform: translateX(-100%); transition: transform .25s ease;
+    box-shadow: 4px 0 14px rgba(0,0,0,0.45);
+  }
+  .chat-sidebar.show{ transform: translateX(0); }
+  .new-chat-btn{
+    background: var(--gold); color: var(--ink); border:none; border-radius:6px;
+    padding: 10px 10px; font-family: var(--font-mono); font-size:0.7rem; font-weight:700;
+    letter-spacing:0.04em; text-transform:uppercase; cursor:pointer;
+  }
+  .new-chat-btn:hover{ background:#f0b752; }
+  .sidebar-label{
+    font-family: var(--font-mono); font-size:0.6rem; letter-spacing:0.1em;
+    text-transform:uppercase; color: rgba(243,238,226,0.45); margin-top:4px;
+  }
+  .chat-list{ display:flex; flex-direction:column; gap:3px; }
+  .chat-list-item{
+    background:transparent; border:none; text-align:left; color: rgba(243,238,226,0.75);
+    font-size:0.74rem; font-family: var(--font-body); padding:8px 8px; border-radius:5px;
+    cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .chat-list-item:hover{ background: rgba(243,238,226,0.06); color: var(--cream); }
+  .chat-list-item.active{ background: rgba(232,169,59,0.15); color: var(--gold); font-weight:600; }
+  .chat-list-empty{ font-family: var(--font-mono); font-size:0.68rem; color: rgba(243,238,226,0.35); padding: 6px 8px; }
+  .chat-main{ width:100%; display:flex; flex-direction:column; min-width:0; }
+  .chat-menu-btn{ display:flex; align-items:center; justify-content:center; background:none; border:none; color: var(--cream); font-size:1.15rem; cursor:pointer; margin-right:2px; opacity:0.85; }
+  .chat-menu-btn:hover{ opacity:1; color: var(--gold); }
   .chat-header{
     background: var(--bg-3); padding: 16px 18px; display:flex; align-items:center; gap:10px;
     border-bottom: 1px solid var(--line);
@@ -325,6 +363,8 @@
     width:38px; border-radius:6px; cursor:pointer; font-weight:700;
   }
 
+  .msg.typing{ font-style:italic; opacity:0.6; }
+
   @media (max-width: 900px){
     .hero-inner{ grid-template-columns: 1fr; }
     .program-grid{ grid-template-columns: 1fr; }
@@ -336,6 +376,9 @@
   }
   @media (max-width: 560px){
     .roster-grid{ grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px){
+    #chat-window{ width: calc(100vw - 24px); height: 72vh; right:12px; bottom:94px; }
   }
   @media (prefers-reduced-motion: reduce){
     *{ transition: none !important; scroll-behavior:auto !important; }
@@ -455,18 +498,20 @@
     <ul class="contact-list">
       <li><span class="k">Location</span><span class="v">Akpakpa, Cotonou, Republic of Benin</span></li>
       <li><span class="k">Phone</span><span class="v">+234 805 171 4842</span></li>
-      <li><span class="k">Email</span><span class="v">adogbejosep419@gmail.com</span></li>
+      <li><span class="k">Email</span><span class="v">josephadogbe4@gmail.com</span></li>
       <li><span class="k">Trials</span><span class="v">Saturdays, 9:00 AM — open to ages 10–17</span></li>
     </ul>
-    <div class="form-box">
+    <form class="form-box" id="contactForm" action="https://formspree.io/f/mdeongpp" method="POST">
       <label for="fname">Name</label>
-      <input type="text" id="fname" placeholder="Full name">
+      <input type="text" id="fname" name="name" placeholder="Full name" required>
       <label for="femail">Email or phone</label>
-      <input type="text" id="femail" placeholder="How we reach you">
+      <input type="text" id="femail" name="_replyto" placeholder="How we reach you" required>
       <label for="fmsg">Message</label>
-      <textarea id="fmsg" placeholder="Tell us about the player — age, position, experience"></textarea>
-      <button class="btn btn-primary">Send message</button>
-    </div>
+      <textarea id="fmsg" name="message" placeholder="Tell us about the player — age, position, experience" required></textarea>
+      <input type="hidden" name="_subject" value="New message from BJ Football Academy website">
+      <button type="submit" class="btn btn-primary" id="formSubmitBtn">Send message</button>
+      <div id="formStatus" class="form-status"></div>
+    </form>
   </div>
 </section>
 
@@ -482,25 +527,28 @@
 </button>
 
 <div id="chat-window">
-  <div class="chat-header">
-    <div class="crest"></div>
-    <div>
-      <div class="ttl">Academy Assistant</div>
-      <span class="sub">● Usually replies instantly</span>
+  <div class="chat-shell">
+    <div class="chat-sidebar" id="chatSidebar">
+      <button class="new-chat-btn" id="newChatBtn">+ New chat</button>
+      <div class="sidebar-label">Recent</div>
+      <div class="chat-list" id="chatList"></div>
     </div>
-    <button class="chat-close" id="chatClose">×</button>
-  </div>
-  <div class="chat-body" id="chatBody">
-    <div class="msg bot">Hi! I'm the BJ Football Academy assistant. Ask me about any player by name or jersey number, positions, trials, age groups, fees, location, or achievements.</div>
-  </div>
-  <div class="quick-replies" id="quickReplies">
-    <button class="qr-btn" data-q="Who is number 9?">Who is #9?</button>
-    <button class="qr-btn" data-q="List our forwards">List forwards</button>
-    <button class="qr-btn" data-q="How do I book a trial?">Book a trial</button>
-  </div>
-  <div class="chat-input-row">
-    <input type="text" id="chatInput" placeholder="Type your question…">
-    <button class="chat-send" id="chatSend">➤</button>
+    <div class="chat-main">
+      <div class="chat-header">
+        <button class="chat-menu-btn" id="chatMenuBtn" aria-label="Toggle chat list">☰</button>
+        <div class="crest"></div>
+        <div>
+          <div class="ttl">Academy Assistant</div>
+          <span class="sub">● Usually replies instantly</span>
+        </div>
+        <button class="chat-close" id="chatClose">×</button>
+      </div>
+      <div class="chat-body" id="chatBody"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask about a player, trial dates…">
+        <button class="chat-send" id="chatSend">➤</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -573,12 +621,47 @@
   });
   renderRoster();
 
+  // ---------------- Contact form -> emails you via Formspree ----------------
+  const contactForm = document.getElementById('contactForm');
+  const formStatus = document.getElementById('formStatus');
+  const formSubmitBtn = document.getElementById('formSubmitBtn');
+
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    formStatus.textContent = '';
+    formStatus.className = 'form-status';
+    formSubmitBtn.disabled = true;
+    formSubmitBtn.textContent = 'Sending…';
+
+    try{
+      const response = await fetch(contactForm.action, {
+        method: 'POST',
+        body: new FormData(contactForm),
+        headers: { 'Accept': 'application/json' }
+      });
+      if(response.ok){
+        formStatus.textContent = "Message sent — we'll get back to you soon.";
+        formStatus.classList.add('success');
+        contactForm.reset();
+      } else {
+        formStatus.textContent = 'Something went wrong — please try again or contact us directly.';
+        formStatus.classList.add('error');
+      }
+    }catch(err){
+      formStatus.textContent = 'Could not send — check your connection and try again.';
+      formStatus.classList.add('error');
+    }finally{
+      formSubmitBtn.disabled = false;
+      formSubmitBtn.textContent = 'Send message';
+    }
+  });
+
   // ---------------- Team info the chatbot can draw on ----------------
   const teamInfo = {
     founded: 2018,
     location: "Akpakpa, Cotonou, Republic of Benin",
     phone: "+234 805 171 4842",
-    email: "adogbejosep419@gmail.com",
+    email: "josephadogbe4@gmail.com",
     coachingStaff: 9,
     trialSchedule: "Saturdays, 9:00 AM, open to ages 10–17",
     divisions: [
@@ -594,31 +677,130 @@
     }
   };
 
-  // ---------------- Chatbot (rule-based, no external API) ----------------
+  // ---------------- Chatbot: real Claude API + new/recent chat sidebar ----------------
   const chatToggle = document.getElementById('chat-toggle');
   const chatWindow = document.getElementById('chat-window');
   const chatClose = document.getElementById('chatClose');
   const chatBody = document.getElementById('chatBody');
   const chatInput = document.getElementById('chatInput');
   const chatSend = document.getElementById('chatSend');
-  const quickReplies = document.getElementById('quickReplies');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const chatList = document.getElementById('chatList');
+  const chatSidebar = document.getElementById('chatSidebar');
+  const chatMenuBtn = document.getElementById('chatMenuBtn');
+
+  let currentConvId = null;
+  let currentMessages = []; // { role: 'user'|'assistant', content: string }
 
   chatToggle.addEventListener('click', () => {
     chatWindow.classList.add('open');
     chatToggle.querySelector('.badge')?.remove();
   });
   chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
+  chatMenuBtn.addEventListener('click', () => chatSidebar.classList.toggle('show'));
 
-  function addMsg(text, who){
+  function addMsgToDOM(text, who){
     const div = document.createElement('div');
     div.className = 'msg ' + who;
     div.textContent = text;
     chatBody.appendChild(div);
     chatBody.scrollTop = chatBody.scrollHeight;
+    return div;
   }
 
+  function renderMessages(){
+    chatBody.innerHTML = '';
+    if(currentMessages.length === 0){
+      addMsgToDOM("Hi! I'm the BJ Football Academy assistant. Ask me about any player by name or jersey number, positions, trials, age groups, fees, location, or achievements.", 'bot');
+    } else {
+      currentMessages.forEach(m => addMsgToDOM(m.content, m.role === 'user' ? 'user' : 'bot'));
+    }
+  }
+
+  function newId(){
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'c' + Date.now() + Math.random().toString(16).slice(2);
+  }
+
+  const CONV_PREFIX = 'bjfa_conv_';
+  const CONV_INDEX_KEY = 'bjfa_conv_index';
+  let storageAvailable = true;
+  try{
+    localStorage.setItem('__bjfa_test__', '1');
+    localStorage.removeItem('__bjfa_test__');
+  }catch(e){
+    storageAvailable = false; // e.g. private browsing / storage blocked
+  }
+
+  function getConvIndex(){
+    if(!storageAvailable) return [];
+    try{
+      return JSON.parse(localStorage.getItem(CONV_INDEX_KEY) || '[]');
+    }catch(e){ return []; }
+  }
+
+  function setConvIndex(idx){
+    if(!storageAvailable) return;
+    try{ localStorage.setItem(CONV_INDEX_KEY, JSON.stringify(idx)); }catch(e){ /* storage full or blocked */ }
+  }
+
+  function saveConversation(){
+    if(!storageAvailable) return;
+    if(!currentConvId) currentConvId = newId();
+    const firstUserMsg = currentMessages.find(m => m.role === 'user');
+    const title = firstUserMsg ? firstUserMsg.content.slice(0, 30) : 'New chat';
+    try{
+      localStorage.setItem(CONV_PREFIX + currentConvId, JSON.stringify({ title, messages: currentMessages, updatedAt: Date.now() }));
+      const idx = getConvIndex().filter(c => c.id !== currentConvId);
+      idx.push({ id: currentConvId, title, updatedAt: Date.now() });
+      setConvIndex(idx);
+    }catch(e){ /* storage full or blocked */ }
+    loadConversationList();
+  }
+
+  function loadConversationList(){
+    const convs = getConvIndex().sort((a, b) => b.updatedAt - a.updatedAt);
+    renderChatList(convs);
+  }
+
+  function renderChatList(convs){
+    chatList.innerHTML = '';
+    if(convs.length === 0){
+      chatList.innerHTML = '<div class="chat-list-empty">No saved chats yet</div>';
+      return;
+    }
+    convs.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'chat-list-item' + (c.id === currentConvId ? ' active' : '');
+      btn.textContent = c.title || 'New chat';
+      btn.addEventListener('click', () => openConversation(c.id));
+      chatList.appendChild(btn);
+    });
+  }
+
+  function openConversation(id){
+    if(!storageAvailable) return;
+    try{
+      const raw = localStorage.getItem(CONV_PREFIX + id);
+      if(raw){
+        const data = JSON.parse(raw);
+        currentConvId = id;
+        currentMessages = data.messages || [];
+        renderMessages();
+        loadConversationList();
+        chatSidebar.classList.remove('show');
+      }
+    }catch(e){ /* conversation missing or unreadable */ }
+  }
+
+  newChatBtn.addEventListener('click', () => {
+    currentConvId = null;
+    currentMessages = [];
+    renderMessages();
+    loadConversationList();
+    chatSidebar.classList.remove('show');
+  });
+
   function findPlayerByName(t){
-    // match on any word in a player's name (min 3 chars to avoid false hits)
     return players.find(p =>
       p.name.toLowerCase().split(' ').some(part => part.length > 2 && t.includes(part))
     );
@@ -637,67 +819,74 @@
 
   function botReply(userText){
     const t = userText.toLowerCase();
-    let reply;
-
-    // --- individual player lookups first (name or jersey number) ---
     const byNum = findPlayerByNumber(t);
     const byName = findPlayerByName(t);
     const player = byNum || byName;
 
-    if(player && (t.includes('who') || t.includes('tell me about') || t.includes('info') || byNum || byName)){
-      reply = `${player.name} wears #${player.num}, plays ${posLabel(player.pos)}, and is ${player.age} years old.`;
-    } else if(t.includes('goalkeeper') || t.includes('goalkeepers') || /\bgk\b/.test(t)){
-      reply = `Our goalkeepers: ${listByPosition('GK')}.`;
-    } else if(t.includes('defender') || t.includes('defenders') || /\bdf\b/.test(t)){
-      reply = `Our defenders: ${listByPosition('DF')}.`;
-    } else if(t.includes('midfielder') || t.includes('midfielders') || /\bmf\b/.test(t)){
-      reply = `Our midfielders: ${listByPosition('MF')}.`;
-    } else if(t.includes('forward') || t.includes('forwards') || t.includes('striker') || /\bfw\b/.test(t)){
-      reply = `Our forwards: ${listByPosition('FW')}.`;
-    } else if(t.includes('how many player') || (t.includes('squad size') )){
-      reply = `We currently have ${players.length} players listed on the Squad Board.`;
+    if(player){
+      return `${player.name} wears #${player.num}, plays ${posLabel(player.pos)}, and is ${player.age} years old.`;
+    } else if(t.includes('goalkeeper') || /\bgk\b/.test(t)){
+      return `Our goalkeepers: ${listByPosition('GK')}.`;
+    } else if(t.includes('defender') || /\bdf\b/.test(t)){
+      return `Our defenders: ${listByPosition('DF')}.`;
+    } else if(t.includes('midfielder') || /\bmf\b/.test(t)){
+      return `Our midfielders: ${listByPosition('MF')}.`;
+    } else if(t.includes('forward') || t.includes('striker') || /\bfw\b/.test(t)){
+      return `Our forwards: ${listByPosition('FW')}.`;
+    } else if(t.includes('how many player') || t.includes('squad size')){
+      return `We currently have ${players.length} players listed on the Squad Board.`;
     } else if(t.includes('captain')){
-      reply = "Captaincy rotates by squad and season — check with the coaching staff for the current match-day captain.";
+      return "Captaincy rotates by squad and season — check with the coaching staff for the current match-day captain.";
     } else if(t.includes('roster') || t.includes('squad') || t.includes('team list') || t.includes('all player')){
-      reply = `Full squad (${players.length}): ` + players.map(p => `#${p.num} ${p.name}`).join(', ') + '. You can also search and filter them visually in the Squad Board above.';
-    } else if(t.includes('found') || t.includes('history') || t.includes('when') && t.includes('start')){
-      reply = `BJ Football Academy was founded in ${teamInfo.founded} and has been running for ${teamInfo.achievements.yearsRunning} years.`;
-    } else if(t.includes('title') || t.includes('trophy') || t.includes('win') || t.includes('achievement')){
-      reply = `We've won ${teamInfo.achievements.regionalTitles} regional titles, sent ${teamInfo.achievements.playersSignedOnward} players on to bigger clubs, and our U-17s have a ${teamInfo.achievements.u17WinRate} match win rate.`;
+      return `Full squad (${players.length}): ` + players.map(p => `#${p.num} ${p.name}`).join(', ') + '. You can also search and filter them visually in the Squad Board above.';
+    } else if(t.includes('found') || t.includes('history') || (t.includes('when') && t.includes('start'))){
+      return `BJ Football Academy was founded in ${teamInfo.founded} and has been running for ${teamInfo.achievements.yearsRunning} years.`;
+    } else if(t.includes('title') || t.includes('trophy') || t.includes('achievement')){
+      return `We've won ${teamInfo.achievements.regionalTitles} regional titles, sent ${teamInfo.achievements.playersSignedOnward} players on to bigger clubs, and our U-17s have a ${teamInfo.achievements.u17WinRate} match win rate.`;
     } else if(t.includes('division') || t.includes('program')){
-      reply = teamInfo.divisions.map(d => `${d.name} (${d.ages}): ${d.focus}`).join(' | ');
+      return teamInfo.divisions.map(d => `${d.name} (${d.ages}): ${d.focus}`).join(' | ');
     } else if(t.includes('trial')){
-      reply = `Trials run ${teamInfo.trialSchedule}. Bring boots, shin guards, and a parent or guardian for registration.`;
+      return `Trials run ${teamInfo.trialSchedule}. Bring boots, shin guards, and a parent or guardian for registration.`;
     } else if(t.includes('age') || t.includes('group')){
-      reply = "We coach three divisions: U-10–U13 (Foundation), U-14–U17 (Development), and U-18+ (Elite Pathway).";
+      return "We coach three divisions: U-10–U13 (Foundation), U-14–U17 (Development), and U-18+ (Elite Pathway).";
     } else if(t.includes('locat') || t.includes('where') || t.includes('address')){
-      reply = `The academy is based in ${teamInfo.location}.`;
+      return `The academy is based in ${teamInfo.location}.`;
     } else if(t.includes('fee') || t.includes('cost') || t.includes('price') || t.includes('pay')){
-      reply = "Fees vary by age division — our team can share current rates by phone or email. See the Contact section below.";
+      return "Fees vary by age division — our team can share current rates by phone or email. See the Contact section below.";
     } else if(t.includes('contact') || t.includes('phone') || t.includes('email')){
-      reply = `You can reach us at ${teamInfo.phone} or ${teamInfo.email} — details are also in the Contact section.`;
+      return `You can reach us at ${teamInfo.phone} or ${teamInfo.email} — details are also in the Contact section.`;
     } else if(t.includes('coach') || t.includes('staff')){
-      reply = `The academy currently runs with ${teamInfo.coachingStaff} coaching staff across all age divisions.`;
+      return `The academy currently runs with ${teamInfo.coachingStaff} coaching staff across all age divisions.`;
     } else if(t.includes('hi') || t.includes('hello') || t.includes('hey')){
-      reply = "Hello! Ask me about any player by name or number, trials, age groups, fees, location, or the full squad.";
-    } else {
-      reply = "I don't have that on file yet — try asking about a specific player (name or jersey number), a position, or academy details. For anything else, reach out via the Contact section.";
+      return "Hello! Ask me about any player by name or number, trials, age groups, fees, location, or the full squad.";
     }
-    setTimeout(() => addMsg(reply, 'bot'), 450);
+    return "I don't have that on file yet — try asking about a specific player (name or jersey number), a position, or academy details. For anything else, reach out via the Contact section.";
+  }
+
+  function respondToMessage(userText){
+    const typingEl = addMsgToDOM('…', 'bot typing');
+    setTimeout(() => {
+      typingEl.remove();
+      const reply = botReply(userText);
+      currentMessages.push({ role: 'assistant', content: reply });
+      addMsgToDOM(reply, 'bot');
+      saveConversation();
+    }, 450);
   }
 
   function sendMessage(text){
     if(!text.trim()) return;
-    addMsg(text, 'user');
+    currentMessages.push({ role: 'user', content: text });
+    addMsgToDOM(text, 'user');
     chatInput.value = '';
-    botReply(text);
+    respondToMessage(text);
   }
 
   chatSend.addEventListener('click', () => sendMessage(chatInput.value));
   chatInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(chatInput.value); });
-  quickReplies.addEventListener('click', e => {
-    if(e.target.classList.contains('qr-btn')) sendMessage(e.target.dataset.q);
-  });
+
+  renderMessages();
+  loadConversationList();
 </script>
 
 </body>
