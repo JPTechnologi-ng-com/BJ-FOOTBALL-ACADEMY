@@ -644,7 +644,18 @@
         formStatus.classList.add('success');
         contactForm.reset();
       } else {
-        formStatus.textContent = 'Something went wrong — please try again or contact us directly.';
+        let detail = '';
+        try{
+          const data = await response.json();
+          if(data && Array.isArray(data.errors) && data.errors.length){
+            detail = data.errors.map(er => er.message || er.field).join('; ');
+          } else if(data && data.error){
+            detail = data.error;
+          }
+        }catch(parseErr){ /* response wasn't JSON */ }
+        formStatus.textContent = detail
+          ? `Could not send: ${detail}`
+          : `Could not send (error ${response.status}) — please try again or contact us directly.`;
         formStatus.classList.add('error');
       }
     }catch(err){
