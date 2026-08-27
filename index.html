@@ -61,7 +61,10 @@
     font-family: var(--font-display);
     letter-spacing: 0.5px;
     font-size: 1.15rem;
+    text-decoration:none; color: inherit; cursor:pointer;
+    transition: opacity .2s ease;
   }
+  .brand:hover{ opacity:0.85; }
   .crest{
     width:34px; height:34px; border-radius:50%;
     background: conic-gradient(var(--gold) 0 33%, var(--red) 33% 66%, var(--bg-2) 66% 100%);
@@ -387,9 +390,9 @@
 </head>
 <body>
 
-<header>
+<header id="top">
   <div class="nav">
-    <div class="brand"><div class="crest"></div>BJ FOOTBALL <span class="small">ACADEMY</span></div>
+    <a href="#top" class="brand" aria-label="BJ Football Academy — back to top"><div class="crest"></div>BJ FOOTBALL <span class="small">ACADEMY</span></a>
     <nav>
       <ul>
         <li><a href="#about">About</a></li>
@@ -505,7 +508,7 @@
       <label for="fname">Name</label>
       <input type="text" id="fname" name="name" placeholder="Full name" required>
       <label for="femail">Email or phone</label>
-      <input type="text" id="femail" name="_replyto" placeholder="How we reach you" required>
+      <input type="text" id="femail" name="contact_info" placeholder="How we reach you" required>
       <label for="fmsg">Message</label>
       <textarea id="fmsg" name="message" placeholder="Tell us about the player — age, position, experience" required></textarea>
       <input type="hidden" name="_subject" value="New message from BJ Football Academy website">
